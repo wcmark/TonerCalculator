@@ -10,7 +10,7 @@ with open('precio_copia.txt', 'r') as txt_precio:
         precio_uno_porciento = int(txt_precio.read()) / 5
 
 def procesar_archivos():
-    global img
+    global img, precio
     # Carpeta que contiene los archivos a procesar
     carpeta = 'archivos_jpg'
 
@@ -23,7 +23,7 @@ def procesar_archivos():
         writer = csv.writer(csvfile)
 
         # deja el archivo en blanco
-        writer.writerow([])
+        writer.writerow(['Precios de las imágenes:'])
 
         # cierra el archivo
         csvfile.close()
@@ -42,7 +42,6 @@ def procesar_archivos():
                 ruta_archivo = os.path.join(carpeta, archivo)
                 img = Image.open(ruta_archivo)
 
-            
                 def procesar_img():
                     global img, black_percentage, precio
                     # Abrir imagen original
@@ -104,9 +103,9 @@ def procesar_archivos():
                     black_percentage = (sum_grayscale / max_sum_grayscale) * 100
 
                     # Establecer el precio de la impresion
-                    precio = "$" + str(round(black_percentage) * precio_uno_porciento)
+                    precio = "$" + str(int(round(black_percentage, 0) * precio_uno_porciento))
 
-            procesar_img()
+                procesar_img()
             # escribe datos
             writer.writerow([precio])
 
@@ -114,3 +113,5 @@ def procesar_archivos():
         csvfile.close()
 
 procesar_archivos()
+
+os.startfile('datos.csv')
