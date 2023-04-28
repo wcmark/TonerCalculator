@@ -1,65 +1,112 @@
+import os
 from PIL import Image
+import csv
 
 # Tamaño de la hoja de papel de destino en píxeles
 tamano_papel = (2480, 3508)
 
-# Abrir imagen original
-img = Image.open('imp.jpg')
+def procesar_archivos():
+    global img
+    # Carpeta que contiene los archivos a procesar
+    carpeta = 'archivos_jpg'
 
-## Determinar Ancho y Alto de la imagen
-ancho_img = img.width
-alto_img = img.height
+    # Obtener la lista de archivos en la carpeta
+    archivos = os.listdir(carpeta)
 
-## Calcular relaciones de aspecto
-relacion_img = ancho_img / alto_img
-relacion_pap = tamano_papel[0] / tamano_papel[1]
+    # abre el archivo csv para escribir en él
+    with open('datos.csv', mode='w', newline='') as csvfile:
+        # crea un objeto writer de CSV
+        writer = csv.writer(csvfile)
 
-## Evaluar so es necesario rotar
-if relacion_img > relacion_pap:
-    img = img.rotate(90, expand=True)
+        # deja el archivo en blanco
+        writer.writerow([])
 
-## Volver a calcular dimenciones y relaciones
-ancho_img = img.width
-alto_img = img.height
+        # cierra el archivo
+        csvfile.close()
 
-## Calcular relaciones de aspecto
-relacion_img = ancho_img / alto_img
 
-## Ecalar imagen
-if relacion_img == relacion_pap:
-    img = img.resize(tamano_papel)
-else:
-    escalado_ancho = int((tamano_papel[1] / alto_img) * ancho_img )
-    escalado_alto = int(tamano_papel[1])
-    tamano_maximo = (escalado_ancho, escalado_alto)
-    img = img.resize(tamano_maximo)
+    # abre el archivo csv para escribir en él
+    with open('datos.csv', mode='a', newline='') as csvfile:
+        # crea un objeto writer de CSV
+        writer = csv.writer(csvfile)
 
-# Crear nueva imagen blanca del tamaño de la hoja de papel
-imagen_final = Image.new("RGB", tamano_papel, "white")
+        # Procesar cada archivo individualmente
+        for archivo in archivos:
+            # Comprobar que el archivo es una imagen (opcional)
+            if archivo.endswith('.jpg') or archivo.endswith('.png'):
+                # Abrir imagen original
+                ruta_archivo = os.path.join(carpeta, archivo)
+                img = Image.open(ruta_archivo)
 
-# Pegar imagen escalada en el centro de la hoja de papel
-posicion = ((tamano_papel[0] - tamano_maximo[0]) // 2, (tamano_papel[1] - tamano_maximo[1]) // 2)
-imagen_final.paste(img, posicion)
+            
+                def procesar_img():
+                    global img, black_percentage, precio
+                    # Abrir imagen original
+                    ##img = Image.open('imp.jpg')
 
-im = imagen_final
+                    ## Determinar Ancho y Alto de la imagen
+                    ancho_img = img.width
+                    alto_img = img.height
 
-# convertir la imagen a escala de grises
-im_grayscale = im.convert('L').point(lambda x: 255 - x)
-im_grayscale.save('imp_temp.jpg')
+                    ## Calcular relaciones de aspecto
+                    relacion_img = ancho_img / alto_img
+                    relacion_pap = tamano_papel[0] / tamano_papel[1]
 
-# obtener la matriz de píxeles
-pixels = im_grayscale.load()
+                    ## Evaluar so es necesario rotar
+                    if relacion_img > relacion_pap:
+                        img = img.rotate(90, expand=True)
 
-# sumar los valores de cada píxel en escala de grises
-sum_grayscale = 0
-for i in range(im_grayscale.size[0]):
-    for j in range(im_grayscale.size[1]):
-        sum_grayscale += pixels[i,j]
+                    ## Volver a calcular dimenciones y relaciones
+                    ancho_img = img.width
+                    alto_img = img.height
 
-# calcular el valor máximo posible
-max_sum_grayscale = im_grayscale.size[0] * im_grayscale.size[1] * 255
+                    ## Calcular relaciones de aspecto
+                    relacion_img = ancho_img / alto_img
 
-# calcular el porcentaje de "negro" de la totalidad de la imagen
-black_percentage = (sum_grayscale / max_sum_grayscale) * 100
+                    ## Ecalar imagen
+                    if relacion_img == relacion_pap:
+                        img = img.resize(tamano_papel)
+                    else:
+                        escalado_ancho = int((tamano_papel[1] / alto_img) * ancho_img )
+                        escalado_alto = int(tamano_papel[1])
+                        tamano_maximo = (escalado_ancho, escalado_alto)
+                        img = img.resize(tamano_maximo)
 
-print("El porcentaje de 'negro' de la totalidad de la imagen es:", black_percentage, "%")
+                    # Crear nueva imagen blanca del tamaño de la hoja de papel
+                    imagen_final = Image.new("RGB", tamano_papel, "white")
+
+                    # Pegar imagen escalada en el centro de la hoja de papel
+                    posicion = ((tamano_papel[0] - tamano_maximo[0]) // 2, (tamano_papel[1] - tamano_maximo[1]) // 2)
+                    imagen_final.paste(img, posicion)
+
+                    im = imagen_final
+
+                    # convertir la imagen a escala de grises
+                    im_grayscale = im.convert('L').point(lambda x: 255 - x)
+                    
+                    # obtener la matriz de píxeles
+                    pixels = im_grayscale.load()
+
+                    # sumar los valores de cada píxel en escala de grises
+                    sum_grayscale = 0
+                    for i in range(im_grayscale.size[0]):
+                        for j in range(im_grayscale.size[1]):
+                            sum_grayscale += pixels[i,j]
+
+                    # calcular el valor máximo posible
+                    max_sum_grayscale = im_grayscale.size[0] * im_grayscale.size[1] * 255
+
+                    # calcular el porcentaje de "negro" de la totalidad de la imagen
+                    black_percentage = (sum_grayscale / max_sum_grayscale) * 100
+
+                    # Establecer el precio de la impresion
+                    precio = "$" + str(round(black_percentage) * 4)
+
+            procesar_img()
+            # escribe datos
+            writer.writerow([precio])
+
+        # cierra el archivo
+        csvfile.close()
+
+procesar_archivos()
