@@ -5,6 +5,10 @@ import csv
 # Tamaño de la hoja de papel de destino en píxeles
 tamano_papel = (2480, 3508)
 
+# Establecer el precio estándar de copia según 5% de cobertura de toner
+with open('precio_copia.txt', 'r') as txt_precio:
+        precio_uno_porciento = int(txt_precio.read()) / 5
+
 def procesar_archivos():
     global img
     # Carpeta que contiene los archivos a procesar
@@ -100,7 +104,7 @@ def procesar_archivos():
                     black_percentage = (sum_grayscale / max_sum_grayscale) * 100
 
                     # Establecer el precio de la impresion
-                    precio = "$" + str(round(black_percentage) * 4)
+                    precio = "$" + str(round(black_percentage) * precio_uno_porciento)
 
             procesar_img()
             # escribe datos
